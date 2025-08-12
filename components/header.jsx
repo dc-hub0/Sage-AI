@@ -31,7 +31,7 @@ export default async function Header() {
             alt="SageAi logo"
             width={200}
             height={60}
-            className="h-20 py-1 w-auto object-contain"   //For Changing logo size
+            className="h-30 py-1 w-auto object-contain"   //For Changing logo size
           />
         </Link>
 
