@@ -13,7 +13,10 @@ export default function StatsCards({ assessments }) {
 
   const getLatestAssessment = () => {
     if (!assessments?.length) return null;
-    return assessments[0];
+    // If assessments are ordered oldest to newest, get the last item
+    return assessments[assessments.length - 1];
+    // If not, sort by date property (e.g., assessment.date) and get the latest:
+    // return [...assessments].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
   };
 
   const getTotalQuestions = () => {

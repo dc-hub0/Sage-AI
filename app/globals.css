@@ -184,3 +184,30 @@
     padding-right: 0.5rem; /* pr-2 */
   }
 }
+
+.pdf-export {
+  /* Hard override theme variables */
+  --background: #ffffff !important;
+  --foreground: #000000 !important;
+  --card: #ffffff !important;
+  --card-foreground: #000000 !important;
+  --popover: #ffffff !important;
+  --popover-foreground: #000000 !important;
+  --primary: #000000 !important;
+  --primary-foreground: #ffffff !important;
+  --secondary: #e5e5e5 !important;
+  --secondary-foreground: #000000 !important;
+  --muted: #f5f5f5 !important;
+  --muted-foreground: #000000 !important;
+  --accent: #f5f5f5 !important;
+  --accent-foreground: #000000 !important;
+  --destructive: #ff0000 !important;
+  --destructive-foreground: #ffffff !important;
+  --border: #e5e5e5 !important;
+  --input: #e5e5e5 !important;
+  --ring: #000000 !important;
+
+  /* Also force background & text */
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
