@@ -5,21 +5,18 @@ import { Toaster } from "sonner";
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { dark } from "@clerk/themes";
+import ChatBot from "@/components/ChatBot"; // 👈 chatbot
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "SageAI - AI Career Coach",
+  title: "Sage-AI Career Coach",
   description: "",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider
-      appearance={{
-        baseTheme: dark,
-      }}
-    >
+    <ClerkProvider appearance={{ baseTheme: dark }}>
       <html lang="en" suppressHydrationWarning>
         <head>
           <link rel="icon" href="/logo.png" sizes="any" />
@@ -34,6 +31,9 @@ export default function RootLayout({ children }) {
             <Header />
             <main className="min-h-screen">{children}</main>
             <Toaster richColors />
+
+            {/* 👇 AI ChatBot shows on all pages */}
+            <ChatBot />
 
             <footer className="bg-muted/50 py-12">
               <div className="container mx-auto px-4 text-center text-gray-200">
