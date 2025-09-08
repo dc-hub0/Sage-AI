@@ -7,25 +7,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-export async function generateQuiz() {
+// interview.js
+export async function generateQuiz(selectedIndustry, selectedSkills = []) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-    select: {
-      industry: true,
-      skills: true,
-    },
-  });
-
-  if (!user) throw new Error("User not found");
-
   const prompt = `
-    Generate 10 technical interview questions for a ${    //How Many Que u Want to Generate
-      user.industry
-    } professional${
-    user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
+    Generate 10 technical interview questions for a ${selectedIndustry} professional${
+    selectedSkills?.length ? ` with expertise in ${selectedSkills.join(", ")}` : ""
   }.
     
     Each question should be multiple choice with 4 options.
@@ -56,6 +45,7 @@ export async function generateQuiz() {
     throw new Error("Failed to generate quiz questions");
   }
 }
+
 
 export async function saveQuizResult(questions, answers, score) {
   const { userId } = await auth();

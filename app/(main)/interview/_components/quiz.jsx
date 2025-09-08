@@ -10,9 +10,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { generateQuiz, saveQuizResult } from "@/actions/interview";
+import { getUser } from "@/actions/user"; // ✅ new import
 import QuizResult from "./quiz-result";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
@@ -22,11 +31,168 @@ export default function Quiz() {
   const [answers, setAnswers] = useState([]);
   const [showExplanation, setShowExplanation] = useState(false);
 
+  // user profile
+  const [user, setUser] = useState(null);
+
+  // toggle custom mode
+  const [customMode, setCustomMode] = useState(false);
+
+  // custom selections
+  const [selectedIndustry, setSelectedIndustry] = useState("");
+  const [selectedSubIndustry, setSelectedSubIndustry] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState("");
+
+  const [industries, setIndustries] = useState([]);
+
+  // mock data (replace with DB fetch if needed)
+  useEffect(() => {
+    const mockIndustries = [
+  {
+    id: "1",
+    name: "Software Engineering",
+    subIndustries: [
+      "Frontend Development",
+      "Backend Development",
+      "Full Stack Development",
+      "Mobile Development",
+      "DevOps",
+      "Game Development",
+      "Embedded Systems",
+    ],
+  },
+  {
+    id: "2",
+    name: "Data Science",
+    subIndustries: [
+      "Machine Learning",
+      "Artificial Intelligence",
+      "Data Analytics",
+      "Big Data Engineering",
+      "Business Intelligence",
+      "Natural Language Processing",
+      "Computer Vision",
+    ],
+  },
+  {
+    id: "3",
+    name: "Cloud Computing",
+    subIndustries: [
+      "AWS",
+      "Microsoft Azure",
+      "Google Cloud Platform",
+      "Cloud Architecture",
+      "Cloud Security",
+      "Serverless Computing",
+      "Kubernetes & Containerization",
+    ],
+  },
+  {
+    id: "4",
+    name: "Cybersecurity",
+    subIndustries: [
+      "Network Security",
+      "Application Security",
+      "Cloud Security",
+      "Ethical Hacking",
+      "Digital Forensics",
+      "Security Operations (SOC)",
+      "Penetration Testing",
+    ],
+  },
+  {
+    id: "5",
+    name: "Artificial Intelligence",
+    subIndustries: [
+      "Deep Learning",
+      "Generative AI",
+      "AI Ethics",
+      "Reinforcement Learning",
+      "Autonomous Systems",
+      "Robotics",
+    ],
+  },
+  {
+    id: "6",
+    name: "Product & Project Management",
+    subIndustries: [
+      "Agile Project Management",
+      "Scrum Mastery",
+      "Product Ownership",
+      "Technical Program Management",
+      "Stakeholder Management",
+    ],
+  },
+  {
+    id: "7",
+    name: "UI/UX & Design",
+    subIndustries: [
+      "UI Design",
+      "UX Research",
+      "Product Design",
+      "Human-Computer Interaction",
+      "Design Systems",
+      "Interaction Design",
+    ],
+  },
+  {
+    id: "8",
+    name: "Business & Finance",
+    subIndustries: [
+      "Financial Analysis",
+      "Investment Banking",
+      "Risk Management",
+      "Accounting",
+      "Business Strategy",
+      "Entrepreneurship",
+    ],
+  },
+  {
+    id: "9",
+    name: "Marketing & Sales",
+    subIndustries: [
+      "Digital Marketing",
+      "Content Marketing",
+      "SEO/SEM",
+      "Sales Strategy",
+      "Brand Management",
+      "Social Media Marketing",
+    ],
+  },
+  {
+    id: "10",
+    name: "Healthcare & Life Sciences",
+    subIndustries: [
+      "Healthcare IT",
+      "Medical Research",
+      "Biotechnology",
+      "Pharmaceuticals",
+      "Public Health",
+    ],
+  },
+
+    ];
+    setIndustries(mockIndustries);
+  }, []);
+
+  // ✅ fetch logged-in user
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const u = await getUser();
+        setUser(u);
+      } catch (err) {
+        console.error("Failed to load user", err);
+        toast.error("Failed to load user profile");
+      }
+    }
+    loadUser();
+  }, []);
+
   const {
     loading: generatingQuiz,
     fn: generateQuizFn,
     data: quizData,
-  } = useFetch(generateQuiz);
+  } = useFetch((industry, skills) => generateQuiz(industry, skills));
 
   const {
     loading: savingResult,
@@ -76,23 +242,45 @@ export default function Quiz() {
     }
   };
 
-  const startNewQuiz = () => {
+  // ✅ default quiz (registered profile field)
+  const startDefaultQuiz = () => {
+    if (!user?.industry) {
+      toast.error("No registered field found. Please complete onboarding.");
+      return;
+    }
+    setCustomMode(false);
     setCurrentQuestion(0);
     setAnswers([]);
     setShowExplanation(false);
-    generateQuizFn();
+    generateQuizFn(user.industry, user.skills || []);
     setResultData(null);
   };
 
+  // custom quiz
+  const startCustomQuiz = () => {
+    setCustomMode(true);
+  };
+
+  const launchCustomQuiz = () => {
+    setCurrentQuestion(0);
+    setAnswers([]);
+    setShowExplanation(false);
+    generateQuizFn(
+      `${selectedIndustry}-${selectedSubIndustry}`,
+      selectedSkills.split(",").map((s) => s.trim())
+    );
+    setResultData(null);
+  };
+
+  // --- UI states ---
   if (generatingQuiz) {
     return <BarLoader className="mt-4" width={"100%"} color="gray" />;
   }
 
-  // Show results if quiz is completed
   if (resultData) {
     return (
       <div className="mx-2">
-        <QuizResult result={resultData} onStartNew={startNewQuiz} />
+        <QuizResult result={resultData} onStartNew={startDefaultQuiz} />
       </div>
     );
   }
@@ -101,23 +289,89 @@ export default function Quiz() {
     return (
       <Card className="mx-2">
         <CardHeader>
-          <CardTitle>Ready to test your knowledge?</CardTitle>
+          <CardTitle>Choose How You Want to Start</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            This quiz contains 10 questions specific to your industry and
-            skills. Take your time and choose the best answer for each question.
-          </p>
+        <CardContent className="space-y-4">
+          {!customMode ? (
+            <>
+              {/* Default Option */}
+              <Button onClick={startDefaultQuiz} className="w-full">
+                Start Quiz (Registered Field)
+              </Button>
+
+              {/* Switch to Custom */}
+              <Button
+                onClick={startCustomQuiz}
+                variant="outline"
+                className="w-full"
+              >
+                Custom Quiz (Choose Field)
+              </Button>
+            </>
+          ) : (
+            <>
+              {/* Industry */}
+              <Select onValueChange={(value) => setSelectedIndustry(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Industries</SelectLabel>
+                    {industries.map((ind) => (
+                      <SelectItem key={ind.id} value={ind.name}>
+                        {ind.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+
+              {/* Sub-Industry */}
+              {selectedIndustry && (
+                <Select
+                  onValueChange={(value) => setSelectedSubIndustry(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Specialization" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Specializations</SelectLabel>
+                      {industries
+                        .find((ind) => ind.name === selectedIndustry)
+                        ?.subIndustries?.map((sub) => (
+                          <SelectItem key={sub} value={sub}>
+                            {sub}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Skills */}
+              <Input
+                placeholder="Enter skills (comma separated)"
+                value={selectedSkills}
+                onChange={(e) => setSelectedSkills(e.target.value)}
+              />
+
+              <Button
+                onClick={launchCustomQuiz}
+                className="w-full"
+                disabled={!selectedIndustry || !selectedSubIndustry}
+              >
+                Start Custom Quiz
+              </Button>
+            </>
+          )}
         </CardContent>
-        <CardFooter>
-          <Button onClick={generateQuizFn} className="w-full">
-            Start Quiz
-          </Button>
-        </CardFooter>
       </Card>
     );
   }
 
+  // --- Quiz questions ---
   const question = quizData[currentQuestion];
 
   return (
@@ -129,18 +383,18 @@ export default function Quiz() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-lg font-medium">{question.question}</p>
-        <RadioGroup
-          onValueChange={handleAnswer}
-          value={answers[currentQuestion]}
-          className="space-y-2"
-        >
-          {question.options.map((option, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <RadioGroupItem value={option} id={`option-${index}`} />
-              <Label htmlFor={`option-${index}`}>{option}</Label>
-            </div>
-          ))}
-        </RadioGroup>
+        {question.options.map((option, index) => (
+          <div key={index} className="flex items-center space-x-2">
+            <input
+              type="radio"
+              id={`option-${index}`}
+              value={option}
+              checked={answers[currentQuestion] === option}
+              onChange={() => handleAnswer(option)}
+            />
+            <label htmlFor={`option-${index}`}>{option}</label>
+          </div>
+        ))}
 
         {showExplanation && (
           <div className="mt-4 p-4 bg-muted rounded-lg">
@@ -164,12 +418,7 @@ export default function Quiz() {
           disabled={!answers[currentQuestion] || savingResult}
           className="ml-auto"
         >
-          {savingResult && (
-            <BarLoader className="mt-4" width={"100%"} color="gray" />
-          )}
-          {currentQuestion < quizData.length - 1
-            ? "Next Question"
-            : "Finish Quiz"}
+          {currentQuestion < quizData.length - 1 ? "Next Question" : "Finish Quiz"}
         </Button>
       </CardFooter>
     </Card>
