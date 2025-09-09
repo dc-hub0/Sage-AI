@@ -10,7 +10,7 @@ import ChatBot from "@/components/ChatBot";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "AI Career Coach",
+  title: "Sage-AI Career Coach",
   description: "",
 };
 
